@@ -1,0 +1,87 @@
+-- Settings --
+
+local color = Color3.fromRGB(255,255,255)
+
+-- Values --
+
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local UI = Instance.new("ScreenGui",player.PlayerGui)
+local textLabel = Instance.new("TextLabel",UI)
+textLabel.Size = UDim2.new(0.153,0,0.06,0)
+textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+textLabel.TextStrokeTransparency = 0
+textLabel.BackgroundTransparency = 1
+textLabel.TextScaled = true
+
+local provinces = {}
+local coroutines = {}
+local events = {}
+local highlights = {}
+
+local provincespersecond = 0
+
+-- Functions --
+
+local function paintProvinceLoop(province)
+    local highlight = Instance.new("Highlight")
+	highlight.FillTransparency = 0.5
+	highlight.FillColor = color
+	highlight.Adornee = province
+	table.insert(highlights,highlight)
+    local event = runService.Stepped:Connect(function()
+		if player.Character:FindFirstChild("PaintBucket") then
+			if province.Color ~= color then
+				local args = {
+					[1] = "PaintPart",
+					[2] = {
+						["Part"] = province,
+						["Color"] = color
+					},
+					[3] = "Peace"
+				}
+                provincespersecond = provincespersecond + 1
+				game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
+			end
+		end
+    end)
+    table.insert(events,event)
+end
+
+-- Script --
+
+userInputService.InputBegan:Connect(function(input,isTyping)
+	if isTyping == false then
+		if input.KeyCode == Enum.KeyCode.Q then
+			if mouse.Target and mouse.Target.Name == "Province" then
+				local coro = coroutine.create(paintProvinceLoop)
+				coroutine.resume(coro,mouse.Target)
+				table.insert(coroutines,coro)
+			end
+		elseif input.KeyCode == Enum.KeyCode.E then
+			for _,coro in pairs(coroutines) do
+				coroutine.close(coro)
+			end
+			for _,event in pairs(events) do
+				event:Disconnect()
+			end
+			table.clear(highlights)
+		elseif input.KeyCode == Enum.KeyCode.F then
+			if mouse.Target and mouse.Target.Name == "Province" then
+				color = mouse.Target.Color
+				for _,highlight in pairs(highlights) do
+			      highlight.FillColor = color
+		    	end
+			end
+		end
+	end
+end)
+
+while task.wait(1) do
+    textLabel.Text = provincespersecond
+    provincespersecond = 0
+end
