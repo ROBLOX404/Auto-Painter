@@ -82,6 +82,6 @@ userInputService.InputBegan:Connect(function(input,isTyping)
 end)
 
 while task.wait(1) do
-    textLabel.Text = provincespersecond
+    textLabel.Text = provincespersecond.." paint/second"
     provincespersecond = 0
 end
