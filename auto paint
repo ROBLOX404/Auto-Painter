@@ -17,6 +17,9 @@ textLabel.TextColor3 = Color3.fromRGB(255,255,255)
 textLabel.TextStrokeTransparency = 0
 textLabel.BackgroundTransparency = 1
 textLabel.TextScaled = true
+local tool = Instance.new("Tool")
+local tool2 = Instance.new("Tool")
+local tool3 = Instance.new("Tool")
 
 local provinces = {}
 local coroutines = {}
@@ -28,12 +31,12 @@ local provincespersecond = 0
 -- Functions --
 
 local function paintProvinceLoop(province)
-    local highlight = Instance.new("Highlight")
+	local highlight = Instance.new("Highlight")
 	highlight.FillTransparency = 0.5
 	highlight.FillColor = color
 	highlight.Adornee = province
 	table.insert(highlights,highlight)
-    local event = runService.Stepped:Connect(function()
+	local event = runService.Stepped:Connect(function()
 		if player.Character:FindFirstChild("PaintBucket") then
 			if province.Color ~= color then
 				local args = {
@@ -44,15 +47,54 @@ local function paintProvinceLoop(province)
 					},
 					[3] = "Peace"
 				}
-                provincespersecond = provincespersecond + 1
+				provincespersecond = provincespersecond + 1
 				game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
 			end
 		end
-    end)
-    table.insert(events,event)
+	end)
+	table.insert(events,event)
 end
 
 -- Script --
+
+tool.Name = "Protect"
+tool.Parent = player.Backpack
+tool.RequiresHandle = false
+
+tool.Activated:Connect(function()
+	if mouse.Target and mouse.Target.Name == "Province" then
+		local coro = coroutine.create(paintProvinceLoop)
+		coroutine.resume(coro,mouse.Target)
+		table.insert(coroutines,coro)
+	end
+end)
+
+tool2.Name = "Unprotect all"
+tool2.Parent = player.Backpack
+tool2.RequiresHandle = false
+
+tool2.Activated:Connect(function()
+	for _,coro in pairs(coroutines) do
+		coroutine.close(coro)
+	end
+	for _,event in pairs(events) do
+		event:Disconnect()
+	end
+	table.clear(highlights)
+end)
+
+tool3.Name = "Pick Color"
+tool3.Parent = player.Backpack
+tool3.RequiresHandle = false
+
+tool3.Activated:Connect(function()
+	if mouse.Target and mouse.Target.Name == "Province" then
+		color = mouse.Target.Color
+		for _,highlight in pairs(highlights) do
+			highlight.FillColor = color
+		end
+	end
+end)
 
 userInputService.InputBegan:Connect(function(input,isTyping)
 	if isTyping == false then
@@ -74,14 +116,14 @@ userInputService.InputBegan:Connect(function(input,isTyping)
 			if mouse.Target and mouse.Target.Name == "Province" then
 				color = mouse.Target.Color
 				for _,highlight in pairs(highlights) do
-			      highlight.FillColor = color
-		    	end
+					highlight.FillColor = color
+				end
 			end
 		end
 	end
 end)
 
 while task.wait(1) do
-    textLabel.Text = provincespersecond.." paint/second"
-    provincespersecond = 0
+	textLabel.Text = provincespersecond.." paint/second"
+	provincespersecond = 0
 end
