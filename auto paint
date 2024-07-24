@@ -113,7 +113,7 @@ local function paintProvinceLoop(province)
 				}
 				provincespersecond = provincespersecond + 1
 				game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
-				if province.Color ~= color then
+				if provincespersecond > 100 and province.Color ~= color then
 					while wait() do
 						if province.Color == color then
 							break
