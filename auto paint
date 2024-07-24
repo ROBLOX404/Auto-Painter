@@ -267,10 +267,10 @@ mouse.Button1Down:Connect(function()
 		if selectProvincesMode then
 			provinceSound:Play()
 			local clone = mouse.Target:Clone()
-			
+
 			local coro = coroutine.create(paintProvinceLoop)
-			coroutine.resume(coro,mouse.Target,coro,highlight)
-			
+			coroutine.resume(coro,mouse.Target,coro,clone)
+
 			clone.Position -= Vector3.new(0,0.01,0)
 			clone.Material = "Glass"
 			clone.Transparency = 1000000
