@@ -18,11 +18,7 @@ highlight.FillColor = color
 highlight.FillTransparency = 0.8
 highlight.Parent = workspace
 highlight.Adornee = provincesFolder
---[[
-local tool = Instance.new("Tool")
-local tool2 = Instance.new("Tool")
-local tool3 = Instance.new("Tool")
-]]--
+
 local UI = Instance.new("ScreenGui",player.PlayerGui)
 local UIHolder = Instance.new("Frame",UI)
 UIHolder.AnchorPoint = Vector2.new(0.5,0.5)
@@ -89,20 +85,27 @@ local sound = Instance.new("Sound")
 sound.SoundId = "rbxassetid://4612386227"
 sound.Parent = workspace
 local changecolor = Instance.new("Sound")
-sound.SoundId = "rbxassetid://4612383790"
-sound.Parent = workspace
+changecolor.SoundId = "rbxassetid://4612383790"
+changecolor.Parent = workspace
+local sound2 = Instance.new("Sound")
+sound2.SoundId = "rbxassetid://7486747911"
+sound2.Parent = workspace
+sound2.PlaybackSpeed = 2
+local provinceSound = Instance.new("Sound")
+provinceSound.SoundId = "rbxassetid://5694665239"
+provinceSound.Parent = workspace
 
 local provinces = {}
-local coroutines = {}
-local events = {}
-local highlights = {}
 
 local provincespersecond = 0
 local pps = 0
 
 local selectColorMode = false
+local removeProvincesMode = false
 local selectProvincesMode = false
 local safeMode = false
+
+local provinceCodeGenerator = 0
 
 local dragging
 local dragInput
@@ -111,7 +114,7 @@ local startPos
 
 -- Functions --
 
-local function paintProvinceLoop(province)
+local function paintProvinceLoop(province,coro,highlight)
 	local db = true
 	local event = runService.Stepped:Connect(function()
 		if db then
@@ -138,7 +141,14 @@ local function paintProvinceLoop(province)
 			db = true
 		end
 	end)
-	table.insert(events,event)
+	local provinceInfo = {
+		["Province"] = province,
+		["Coroutine"] = coro,
+		["Event"] = event,
+		["Highlight"] = highlight
+	}
+	table.insert(provinces,provinceInfo)
+	provinceCodeGenerator += 1
 end
 
 local function createNewOption(optionType,text,customText)
@@ -240,7 +250,8 @@ userInputService.InputChanged:Connect(function(input)
 end)
 
 local button2 = createNewOption("color","Country Color")
-local button1 = createNewOption("custom","Protected Provinces: "..#provinces,"Add")
+local button1 = createNewOption("custom","Protect Provinces","Add")
+local button5 = createNewOption("custom","Remove Province Protection","Remove")
 local button3 = createNewOption("custom","Clear Provinces","Clear")
 local button4 = createNewOption("switch","Safe Mode")
 
@@ -254,14 +265,24 @@ mouse.Button1Down:Connect(function()
 			changecolor:Play()
 		end
 		if selectProvincesMode then
-			if mouse.Target and mouse.Target.Name == "Province" then
-				local coro = coroutine.create(paintProvinceLoop)
-				coroutine.resume(coro,mouse.Target)
-				table.insert(coroutines,coro)
-				local clone = mouse.Target:Clone()
-				clone.Material = "Glass"
-				clone.Transparency = 1000000
-				clone.Parent = provincesFolder
+			provinceSound:Play()
+			local clone = mouse.Target:Clone()
+			
+			local coro = coroutine.create(paintProvinceLoop)
+			coroutine.resume(coro,mouse.Target,coro,highlight)
+			
+			clone.Position -= Vector3.new(0,0.01,0)
+			clone.Material = "Glass"
+			clone.Transparency = 1000000
+			clone.Parent = provincesFolder
+		end
+		if removeProvincesMode then
+			for _,info in pairs(provinces) do
+				if mouse.Target == info.Province then
+					coroutine.close(info.Coroutine)
+					info.Event:Disconnect()
+					info.Highlight:Destroy()
+				end
 			end
 		end
 	end
@@ -277,30 +298,25 @@ button1.MouseButton1Down:Connect(function()
 	UIHolder.Visible = false
 	selectProvincesMode = true
 	doneButton.Visible = true
-	while wait(1) do
-		button1.Parent.TextLabel.Text = "Protected Provinces: "..#provinces
-	end
 end)
 
 doneButton.MouseButton1Down:Connect(function()
+	removeProvincesMode = false
 	selectProvincesMode = false
 	UIHolder.Visible = true
 	doneButton.Visible = false
 end)
 
 button3.MouseButton1Down:Connect(function()
-	for _,coro in pairs(coroutines) do
-		coroutine.close(coro)
+	for _,info in pairs(provinces) do
+		coroutine.close(info.Coroutine)
+		info.Event:Disconnect()
+		info.Highlight:Destroy()
 	end
-	table.clear(coroutines)
-	for _,event in pairs(events) do
-		event:Disconnect()
-	end
-	table.clear(events)
-	provincesFolder:ClearAllChildren()
 end)
 
 button4.MouseButton1Down:Connect(function()
+	sound2:Play()
 	if safeMode then
 		safeMode = false
 		tweenService:Create(button4.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(241, 33, 103)}):Play()
@@ -312,6 +328,12 @@ button4.MouseButton1Down:Connect(function()
 		tweenService:Create(button4,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
 		tweenService:Create(button4,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
 	end
+end)
+
+button5.MouseButton1Down:Connect(function()
+	UIHolder.Visible = false
+	removeProvincesMode = true
+	doneButton.Visible = true
 end)
 
 while task.wait(1) do
