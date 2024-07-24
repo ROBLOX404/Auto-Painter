@@ -158,7 +158,7 @@ local function createNewOption(optionType,text,customText)
 	textlabel.TextXAlignment = Enum.TextXAlignment.Left
 	if optionType == "switch" then
 		local switchFrame = Instance.new("Frame",optionFrame)
-		switchFrame.BackgroundColor3 = Color3.fromRGB(255,105,164)
+		switchFrame.BackgroundColor3 = Color3.fromRGB(241, 33, 103)
 		switchFrame.Position = UDim2.new(0.865,0,0.125,0)
 		switchFrame.Size = UDim2.new(0.125,0,0.75,0)
 		switchFrame.BorderSizePixel = 0
@@ -242,6 +242,7 @@ end)
 local button2 = createNewOption("color","Country Color")
 local button1 = createNewOption("custom","Protected Provinces: "..#provinces,"Add")
 local button3 = createNewOption("custom","Clear Provinces","Clear")
+local button4 = createNewOption("switch","Safe Mode")
 
 mouse.Button1Down:Connect(function()
 	if mouse.Target and mouse.Target.Name == "Province" then
@@ -297,6 +298,20 @@ button3.MouseButton1Down:Connect(function()
 	end
 	table.clear(events)
 	provincesFolder:ClearAllChildren()
+end)
+
+button4.MouseButton1Down:Connect(function()
+	if safeMode then
+		safeMode = false
+		tweenService:Create(button4.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(241, 33, 103)}):Play()
+		tweenService:Create(button4,TweenInfo.new(0.1),{Position = UDim2.new(0,0,0,0)}):Play()
+		tweenService:Create(button4,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(0,0)}):Play()
+	else
+		safeMode = true
+		tweenService:Create(button4.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
+		tweenService:Create(button4,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
+		tweenService:Create(button4,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
+	end
 end)
 
 while task.wait(1) do
