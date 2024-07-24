@@ -10,16 +10,77 @@ local runService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
-local UI = Instance.new("ScreenGui",player.PlayerGui)
-local textLabel = Instance.new("TextLabel",UI)
-textLabel.Size = UDim2.new(0.153,0,0.06,0)
-textLabel.TextColor3 = Color3.fromRGB(255,255,255)
-textLabel.TextStrokeTransparency = 0
-textLabel.BackgroundTransparency = 1
-textLabel.TextScaled = true
+local provincesFolder = Instance.new("Model")
+provincesFolder.Parent = workspace
+local highlight = Instance.new("Highlight")
+highlight.FillColor = color
+highlight.FillTransparency = 0.8
+highlight.Parent = workspace
+highlight.Adornee = provincesFolder
+--[[
 local tool = Instance.new("Tool")
 local tool2 = Instance.new("Tool")
 local tool3 = Instance.new("Tool")
+]]--
+local UI = Instance.new("ScreenGui",player.PlayerGui)
+local UIHolder = Instance.new("Frame",UI)
+UIHolder.AnchorPoint = Vector2.new(0.5,0.5)
+UIHolder.BackgroundTransparency = 1
+UIHolder.Position = UDim2.new(0.5,0,0.5,0)
+UIHolder.Size = UDim2.new(1,0,1,0)
+local aspectratio = Instance.new("UIAspectRatioConstraint",UIHolder)
+local mainFrame = Instance.new("Frame",UIHolder)
+mainFrame.BorderColor3 = Color3.fromRGB(0,0,0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(33,33,42)
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+mainFrame.Position = UDim2.new(0.5,0,0.5,0)
+mainFrame.Size = UDim2.new(0.5,0,0.276,0)
+local topBar = Instance.new("Frame",mainFrame)
+topBar.BorderColor3 = Color3.fromRGB(0,0,0)
+topBar.BackgroundColor3 = Color3.fromRGB(49,49,64)
+topBar.Size = UDim2.new(1,0,0.14,0)
+local pss = Instance.new("TextLabel",topBar)
+pss.Text = "0 paint/second"
+pss.AnchorPoint = Vector2.new(0,0.5)
+pss.Size = UDim2.new(0.974,0,0.5,0)
+pss.Position = UDim2.new(0,0,0.5,0)
+pss.TextColor3 = Color3.fromRGB(255,255,255)
+pss.BackgroundTransparency = 1
+pss.TextScaled = true
+pss.TextXAlignment = Enum.TextXAlignment.Right
+local scrollFrame = Instance.new("ScrollingFrame",mainFrame)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.Position = UDim2.new(0,0,0.14,0)
+scrollFrame.Size = UDim2.new(1,0,0.86,0)
+scrollFrame.ScrollBarThickness = 0
+local panelTitle = Instance.new("TextLabel",topBar)
+panelTitle.AnchorPoint = Vector2.new(0,0.5)
+panelTitle.BackgroundTransparency = 1
+panelTitle.Position = UDim2.new(0.02,0,0.5,0)
+panelTitle.Size = UDim2.new(1,0,0.5,0)
+panelTitle.Text = '<b>Paint Admin Panel</b><font size="6"> PRO</font>'
+panelTitle.RichText = true
+panelTitle.TextScaled = true
+panelTitle.TextColor3 = Color3.fromRGB(255,255,255)
+panelTitle.TextXAlignment = Enum.TextXAlignment.Left
+local listlayout = Instance.new("UIListLayout",scrollFrame)
+listlayout.Padding = UDim.new(0,10)
+local uipadding = Instance.new("UIPadding",scrollFrame)
+uipadding.PaddingTop = UDim.new(0,10)
+uipadding.PaddingLeft = UDim.new(0,10)
+uipadding.PaddingRight = UDim.new(0,10)
+uipadding.PaddingBottom = UDim.new(0,10)
+local doneButton = Instance.new("TextButton",UI)
+doneButton.Visible = false
+doneButton.AnchorPoint = Vector2.new(0.5,0)
+doneButton.BackgroundColor3 = Color3.fromRGB(0,247,159)
+doneButton.Position = UDim2.new(0.5,0,0,0)
+doneButton.Size = UDim2.new(0.3,0,0.1,0)
+doneButton.TextColor3 = Color3.fromRGB(255,255,255)
+doneButton.TextScaled = true
+doneButton.Text = "Done"
+doneButton.AutoButtonColor = false
+doneButton.BorderSizePixel = 0
 
 local provinces = {}
 local coroutines = {}
@@ -28,14 +89,17 @@ local highlights = {}
 
 local provincespersecond = 0
 
+local selectColorMode = false
+local selectProvincesMode = false
+
+local dragging
+local dragInput
+local dragStart
+local startPos
+
 -- Functions --
 
 local function paintProvinceLoop(province)
-	local highlight = Instance.new("Highlight")
-	highlight.FillTransparency = 0.5
-	highlight.FillColor = color
-	highlight.Adornee = province
-	table.insert(highlights,highlight)
 	local event = runService.Stepped:Connect(function()
 		if player.Character:FindFirstChild("PaintBucket") then
 			if province.Color ~= color then
@@ -49,14 +113,83 @@ local function paintProvinceLoop(province)
 				}
 				provincespersecond = provincespersecond + 1
 				game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
+				if province.Color ~= color then
+					while wait() do
+						if province.Color == color then
+							break
+						end
+					end
+				end
 			end
 		end
 	end)
 	table.insert(events,event)
 end
 
+local function createNewOption(optionType,text,customText)
+	local optionFrame = Instance.new("Frame",scrollFrame)
+	optionFrame.BorderColor3 = Color3.fromRGB(0,0,0)
+	optionFrame.BackgroundColor3 = Color3.fromRGB(49, 49, 64)
+	optionFrame.Size = UDim2.new(1,0,0.075,0)
+	optionFrame.Parent = scrollFrame
+	local textlabel = Instance.new("TextLabel",optionFrame)
+	textlabel.BackgroundTransparency = 1
+	textlabel.Position = UDim2.new(0.02,0,0.2,0)
+	textlabel.Size = UDim2.new(1,0,0.6,0)
+	textlabel.TextScaled = true
+	textlabel.Text = text
+	textlabel.Font = Enum.Font.SourceSansBold
+	textlabel.TextColor3 = Color3.fromRGB(255,255,255)
+	textlabel.TextXAlignment = Enum.TextXAlignment.Left
+	if optionType == "switch" then
+		local switchFrame = Instance.new("Frame",optionFrame)
+		switchFrame.BackgroundColor3 = Color3.fromRGB(255,105,164)
+		switchFrame.Position = UDim2.new(0.865,0,0.125,0)
+		switchFrame.Size = UDim2.new(0.125,0,0.75,0)
+		switchFrame.BorderSizePixel = 0
+		local switch = Instance.new("ImageButton",switchFrame)
+		switch.AutoButtonColor = false
+		switch.BorderSizePixel = 0
+		switch.Size = UDim2.new(1,0,1,0)
+		switch.BackgroundColor3 = Color3.fromRGB(255,255,255)
+		local aspectRatio = Instance.new("UIAspectRatioConstraint",switch)
+		return switch
+	elseif optionType == "color" then
+		local colorButton = Instance.new("ImageButton",optionFrame)
+		colorButton.Position = UDim2.new(0.928,0,0.125,0)
+		colorButton.AutoButtonColor = false
+		colorButton.Size = UDim2.new(0.062,0,0.75,0)
+		return colorButton
+	elseif optionType == "custom" then
+		local button = Instance.new("ImageButton",optionFrame)
+		button.BackgroundColor3 = Color3.fromRGB(100,100,100)
+		button.Position = UDim2.new(0.865,0,0.125,0)
+		button.Size = UDim2.new(0.125,0,0.75,0)
+		button.AutoButtonColor = false
+		local textlabel = Instance.new("TextLabel",button)
+		textlabel.BackgroundTransparency = 1
+		textlabel.Position = UDim2.new(0.5,0,0.5,0)
+		textlabel.AnchorPoint = Vector2.new(0.5,0.5)
+		textlabel.Size = UDim2.new(0.8,0,0.8,0)
+		textlabel.Text = customText
+		textlabel.TextScaled = true
+		textlabel.Font = Enum.Font.SourceSansBold
+		textlabel.TextColor3 = Color3.fromRGB(255,255,255)
+		return button
+	end
+end
+
+local function update(input)
+	local delta = input.Position - dragStart
+	mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
 -- Script --
 
+if userInputService.MouseEnabled == false then
+	UIHolder.Size = UDim2.new(1.5,0,1.5,0)
+end
+--[[
 tool.Name = "Protect"
 tool.Parent = player.Backpack
 tool.RequiresHandle = false
@@ -80,7 +213,6 @@ tool2.Activated:Connect(function()
 	for _,event in pairs(events) do
 		event:Disconnect()
 	end
-	table.clear(highlights)
 end)
 
 tool3.Name = "Pick Color"
@@ -90,12 +222,9 @@ tool3.RequiresHandle = false
 tool3.Activated:Connect(function()
 	if mouse.Target and mouse.Target.Name == "Province" then
 		color = mouse.Target.Color
-		for _,highlight in pairs(highlights) do
-			highlight.FillColor = color
-		end
 	end
 end)
-
+]]--
 userInputService.InputBegan:Connect(function(input,isTyping)
 	if isTyping == false then
 		if input.KeyCode == Enum.KeyCode.Q then
@@ -111,19 +240,97 @@ userInputService.InputBegan:Connect(function(input,isTyping)
 			for _,event in pairs(events) do
 				event:Disconnect()
 			end
-			table.clear(highlights)
 		elseif input.KeyCode == Enum.KeyCode.F then
 			if mouse.Target and mouse.Target.Name == "Province" then
 				color = mouse.Target.Color
-				for _,highlight in pairs(highlights) do
-					highlight.FillColor = color
-				end
 			end
 		end
 	end
 end)
 
+topBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+topBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+local button1 = createNewOption("custom","Protected Provinces: "..#provinces,"Add")
+local button2 = createNewOption("color","Country Color")
+local button3 = createNewOption("custom","Clear Provinces","Clear")
+
+mouse.Button1Down:Connect(function()
+	if mouse.Target and mouse.Target.Name == "Province" then
+		if selectColorMode then
+			color = mouse.Target.Color
+			selectColorMode = false
+			UIHolder.Visible = true
+			button2.BackgroundColor3 = color
+		end
+		if selectProvincesMode then
+			if mouse.Target and mouse.Target.Name == "Province" then
+				local coro = coroutine.create(paintProvinceLoop)
+				coroutine.resume(coro,mouse.Target)
+				table.insert(coroutines,coro)
+				local clone = mouse.Target:Clone()
+				clone.Material = "Glass"
+				clone.Transparency = 1000000
+				clone.Parent = provincesFolder
+			end
+		end
+	end
+end)
+
+button2.BackgroundColor3 = color
+button2.MouseButton1Down:Connect(function()
+	UIHolder.Visible = false
+	selectColorMode = true
+end)
+
+button1.MouseButton1Down:Connect(function()
+	UIHolder.Visible = false
+	selectProvincesMode = true
+	doneButton.Visible = true
+end)
+
+doneButton.MouseButton1Down:Connect(function()
+	selectProvincesMode = false
+	UIHolder.Visible = true
+	doneButton.Visible = false
+end)
+
+button3.MouseButton1Down:Connect(function()
+	for _,coro in pairs(coroutines) do
+		coroutine.close(coro)
+	end
+	table.clear(coroutines)
+	for _,event in pairs(events) do
+		event:Disconnect()
+	end
+	table.clear(events)
+	provincesFolder:ClearAllChildren()
+end)
+
 while task.wait(1) do
-	textLabel.Text = provincespersecond.." paint/second"
+	pss.Text = provincespersecond.." paint/second"
 	provincespersecond = 0
 end
