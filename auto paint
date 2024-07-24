@@ -6,6 +6,7 @@ local color = Color3.fromRGB(255,255,255)
 
 local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
 
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -27,14 +28,14 @@ local UIHolder = Instance.new("Frame",UI)
 UIHolder.AnchorPoint = Vector2.new(0.5,0.5)
 UIHolder.BackgroundTransparency = 1
 UIHolder.Position = UDim2.new(0.5,0,0.5,0)
-UIHolder.Size = UDim2.new(0.75,0,0.75,0)
+UIHolder.Size = UDim2.new(0,0,0,0)
 local aspectratio = Instance.new("UIAspectRatioConstraint",UIHolder)
 local mainFrame = Instance.new("Frame",UIHolder)
-mainFrame.BorderColor3 = Color3.fromRGB(0,0,0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(33,33,42)
 mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
 mainFrame.Position = UDim2.new(0.5,0,0.5,0)
 mainFrame.Size = UDim2.new(0.5,0,0.276,0)
+mainFrame.Rotation = 359
 local topBar = Instance.new("Frame",mainFrame)
 topBar.BorderColor3 = Color3.fromRGB(0,0,0)
 topBar.BackgroundColor3 = Color3.fromRGB(49,49,64)
@@ -81,6 +82,15 @@ doneButton.TextScaled = true
 doneButton.Text = "Done"
 doneButton.AutoButtonColor = false
 doneButton.BorderSizePixel = 0
+local whiteFrame = Instance.new("Frame",mainFrame)
+whiteFrame.Size = UDim2.new(1,0,1,0)
+whiteFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://4612386227"
+sound.Parent = workspace
+local changecolor = Instance.new("Sound")
+sound.SoundId = "rbxassetid://4612383790"
+sound.Parent = workspace
 
 local provinces = {}
 local coroutines = {}
@@ -88,9 +98,11 @@ local events = {}
 local highlights = {}
 
 local provincespersecond = 0
+local pps = 0
 
 local selectColorMode = false
 local selectProvincesMode = false
+local safeMode = false
 
 local dragging
 local dragInput
@@ -100,27 +112,30 @@ local startPos
 -- Functions --
 
 local function paintProvinceLoop(province)
+	local db = true
 	local event = runService.Stepped:Connect(function()
-		if player.Character:FindFirstChild("PaintBucket") then
-			if province.Color ~= color then
-				local args = {
-					[1] = "PaintPart",
-					[2] = {
-						["Part"] = province,
-						["Color"] = color
-					},
-					[3] = "Peace"
-				}
-				provincespersecond = provincespersecond + 1
-				game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
-				if provincespersecond > 100 and province.Color ~= color then
-					while wait() do
-						if province.Color == color then
-							break
-						end
+		if db then
+			db = false
+			if pps <= 1000 then
+				if player.Character:FindFirstChild("PaintBucket") then
+					if province.Color ~= color then
+						local args = {
+							[1] = "PaintPart",
+							[2] = {
+								["Part"] = province,
+								["Color"] = color
+							},
+							[3] = "Peace"
+						}
+						provincespersecond = provincespersecond + 1
+						game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
 					end
 				end
+				if safeMode then
+					wait(1)
+				end
 			end
+			db = true
 		end
 	end)
 	table.insert(events,event)
@@ -186,67 +201,17 @@ end
 
 -- Script --
 
+wait(1)
+
+sound:Play()
+
 if userInputService.MouseEnabled == false then
-	UIHolder.Size = UDim2.new(1.5,0,1.5,0)
+	tweenService:Create(UIHolder,TweenInfo.new(0.5),{Size = UDim2.new(1.5,0,1.5,0)}):Play()
+else
+	tweenService:Create(UIHolder,TweenInfo.new(0.5),{Size = UDim2.new(0.75,0,0.75,0)}):Play()
 end
---[[
-tool.Name = "Protect"
-tool.Parent = player.Backpack
-tool.RequiresHandle = false
-
-tool.Activated:Connect(function()
-	if mouse.Target and mouse.Target.Name == "Province" then
-		local coro = coroutine.create(paintProvinceLoop)
-		coroutine.resume(coro,mouse.Target)
-		table.insert(coroutines,coro)
-	end
-end)
-
-tool2.Name = "Unprotect all"
-tool2.Parent = player.Backpack
-tool2.RequiresHandle = false
-
-tool2.Activated:Connect(function()
-	for _,coro in pairs(coroutines) do
-		coroutine.close(coro)
-	end
-	for _,event in pairs(events) do
-		event:Disconnect()
-	end
-end)
-
-tool3.Name = "Pick Color"
-tool3.Parent = player.Backpack
-tool3.RequiresHandle = false
-
-tool3.Activated:Connect(function()
-	if mouse.Target and mouse.Target.Name == "Province" then
-		color = mouse.Target.Color
-	end
-end)
-]]--
-userInputService.InputBegan:Connect(function(input,isTyping)
-	if isTyping == false then
-		if input.KeyCode == Enum.KeyCode.Q then
-			if mouse.Target and mouse.Target.Name == "Province" then
-				local coro = coroutine.create(paintProvinceLoop)
-				coroutine.resume(coro,mouse.Target)
-				table.insert(coroutines,coro)
-			end
-		elseif input.KeyCode == Enum.KeyCode.E then
-			for _,coro in pairs(coroutines) do
-				coroutine.close(coro)
-			end
-			for _,event in pairs(events) do
-				event:Disconnect()
-			end
-		elseif input.KeyCode == Enum.KeyCode.F then
-			if mouse.Target and mouse.Target.Name == "Province" then
-				color = mouse.Target.Color
-			end
-		end
-	end
-end)
+tweenService:Create(mainFrame,TweenInfo.new(0.5),{Rotation = 0}):Play()
+tweenService:Create(whiteFrame,TweenInfo.new(4),{BackgroundTransparency = 1}):Play()
 
 topBar.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -274,8 +239,8 @@ userInputService.InputChanged:Connect(function(input)
 	end
 end)
 
-local button1 = createNewOption("custom","Protected Provinces: "..#provinces,"Add")
 local button2 = createNewOption("color","Country Color")
+local button1 = createNewOption("custom","Protected Provinces: "..#provinces,"Add")
 local button3 = createNewOption("custom","Clear Provinces","Clear")
 
 mouse.Button1Down:Connect(function()
@@ -285,6 +250,7 @@ mouse.Button1Down:Connect(function()
 			selectColorMode = false
 			UIHolder.Visible = true
 			button2.BackgroundColor3 = color
+			changecolor:Play()
 		end
 		if selectProvincesMode then
 			if mouse.Target and mouse.Target.Name == "Province" then
@@ -310,6 +276,9 @@ button1.MouseButton1Down:Connect(function()
 	UIHolder.Visible = false
 	selectProvincesMode = true
 	doneButton.Visible = true
+	while wait(1) do
+		button1.Parent.TextLabel.Text = "Protected Provinces: "..#provinces
+	end
 end)
 
 doneButton.MouseButton1Down:Connect(function()
@@ -331,6 +300,20 @@ button3.MouseButton1Down:Connect(function()
 end)
 
 while task.wait(1) do
+	pss.TextColor3 = Color3.fromRGB(80, 255, 123)
+	if provincespersecond >= 50 then
+		pss.TextColor3 = Color3.fromRGB(247, 226, 112)
+	end
+	if provincespersecond >= 100 then
+		pss.TextColor3 = Color3.fromRGB(245, 128, 37)
+	end
+	if provincespersecond >= 300 then
+		pss.TextColor3 = Color3.fromRGB(235, 8, 10)
+	end
+	if provincespersecond >= 1000 then
+		pss.TextColor3 = Color3.fromRGB(235, 0, 120)
+	end
 	pss.Text = provincespersecond.." paint/second"
+	pps = provincespersecond
 	provincespersecond = 0
 end
