@@ -114,7 +114,7 @@ local startPos
 
 -- Functions --
 
-local function paintProvinceLoop(province,coro,highlight)
+local function paintProvinceLoop(province,coro,highlighty)
 	local db = true
 	local event = runService.Stepped:Connect(function()
 		if db then
@@ -145,7 +145,7 @@ local function paintProvinceLoop(province,coro,highlight)
 		["Province"] = province,
 		["Coroutine"] = coro,
 		["Event"] = event,
-		["Highlight"] = highlight
+		["Highlight"] = highlighty
 	}
 	table.insert(provinces,provinceInfo)
 	provinceCodeGenerator += 1
