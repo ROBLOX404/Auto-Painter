@@ -104,6 +104,8 @@ local selectColorMode = false
 local removeProvincesMode = false
 local selectProvincesMode = false
 local safeMode = false
+local newpaint = false
+local painting = true
 
 local provinceCodeGenerator = 0
 
@@ -117,8 +119,10 @@ local startPos
 local function paintProvinceLoop(province,coro,highlighty)
 	local db = true
 	local event = runService.Stepped:Connect(function()
-		if db then
-			db = false
+		if db and painting then
+			if newpaint == false or safeMode then
+				db = false
+			end
 			if pps <= 1000 then
 				if player.Character:FindFirstChild("PaintBucket") then
 					if province.Color ~= color then
@@ -136,6 +140,8 @@ local function paintProvinceLoop(province,coro,highlighty)
 				end
 				if safeMode then
 					wait(1)
+				elseif newpaint then
+					wait(3)
 				end
 			end
 			db = true
@@ -151,7 +157,7 @@ local function paintProvinceLoop(province,coro,highlighty)
 	provinceCodeGenerator += 1
 end
 
-local function createNewOption(optionType,text,customText)
+local function createNewOption(optionType,text,customText,enabled)
 	local optionFrame = Instance.new("Frame",scrollFrame)
 	optionFrame.BorderColor3 = Color3.fromRGB(0,0,0)
 	optionFrame.BackgroundColor3 = Color3.fromRGB(49, 49, 64)
@@ -178,6 +184,12 @@ local function createNewOption(optionType,text,customText)
 		switch.Size = UDim2.new(1,0,1,0)
 		switch.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		local aspectRatio = Instance.new("UIAspectRatioConstraint",switch)
+		if enabled then
+			print("a")
+			tweenService:Create(switch.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
+			tweenService:Create(switch,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
+			tweenService:Create(switch,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
+		end
 		return switch
 	elseif optionType == "color" then
 		local colorButton = Instance.new("ImageButton",optionFrame)
@@ -254,6 +266,8 @@ local button1 = createNewOption("custom","Protect Provinces","Add")
 local button5 = createNewOption("custom","Remove Province Protection","Remove")
 local button3 = createNewOption("custom","Clear Provinces","Clear")
 local button4 = createNewOption("switch","Safe Mode")
+local togglePaintButton = createNewOption("switch","Toggle Paint",nil,true)
+local newPaintButton = createNewOption("switch","Fast Paint (NEW)")
 
 mouse.Button1Down:Connect(function()
 	if mouse.Target and mouse.Target.Name == "Province" then
@@ -334,6 +348,36 @@ button5.MouseButton1Down:Connect(function()
 	UIHolder.Visible = false
 	removeProvincesMode = true
 	doneButton.Visible = true
+end)
+
+togglePaintButton.MouseButton1Down:Connect(function()
+	sound2:Play()
+	if painting then
+		painting = false
+		tweenService:Create(togglePaintButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(241, 33, 103)}):Play()
+		tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{Position = UDim2.new(0,0,0,0)}):Play()
+		tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(0,0)}):Play()
+	else
+		painting = true
+		tweenService:Create(togglePaintButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
+		tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
+		tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
+	end
+end)
+
+newPaintButton.MouseButton1Down:Connect(function()
+	sound2:Play()
+	if newpaint then
+		newpaint = false
+		tweenService:Create(newPaintButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(241, 33, 103)}):Play()
+		tweenService:Create(newPaintButton,TweenInfo.new(0.1),{Position = UDim2.new(0,0,0,0)}):Play()
+		tweenService:Create(newPaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(0,0)}):Play()
+	else
+		newpaint = true
+		tweenService:Create(newPaintButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
+		tweenService:Create(newPaintButton,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
+		tweenService:Create(newPaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
+	end
 end)
 
 while task.wait(1) do
