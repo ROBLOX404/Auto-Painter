@@ -127,7 +127,7 @@ local function paintProvinceLoop(province,coro,highlighty)
 			end
 			if pps <= 1000 then
 				if player.Character:FindFirstChild("PaintBucket") then
-					if province.Color ~= color then
+					if province.Color ~= color and keepTerColor == false or keepTerColor == true and province.Color ~= savedColor then
 						local args = {
 							[1] = "PaintPart",
 							[2] = {
@@ -144,7 +144,7 @@ local function paintProvinceLoop(province,coro,highlighty)
 									["Color"] = savedColor
 								},
 								[3] = "Peace"
-								}
+							}
 						end
 						provincespersecond = provincespersecond + 1
 						game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
