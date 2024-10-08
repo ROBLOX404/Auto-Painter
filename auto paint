@@ -106,6 +106,7 @@ local selectProvincesMode = false
 local safeMode = false
 local newpaint = false
 local painting = true
+local keepTerColor = false
 
 local provinceCodeGenerator = 0
 
@@ -117,6 +118,7 @@ local startPos
 -- Functions --
 
 local function paintProvinceLoop(province,coro,highlighty)
+	local savedColor = color
 	local db = true
 	local event = runService.Stepped:Connect(function()
 		if db and painting then
@@ -134,6 +136,16 @@ local function paintProvinceLoop(province,coro,highlighty)
 							},
 							[3] = "Peace"
 						}
+						if keepTerColor then
+							args = {
+								[1] = "PaintPart",
+								[2] = {
+									["Part"] = province,
+									["Color"] = savedColor
+								},
+								[3] = "Peace"
+								}
+						end
 						provincespersecond = provincespersecond + 1
 						game:GetService("Players").LocalPlayer.Character.PaintBucket.Remotes.ServerControls:InvokeServer(unpack(args))
 					end
@@ -262,12 +274,14 @@ userInputService.InputChanged:Connect(function(input)
 end)
 
 local button2 = createNewOption("color","Country Color")
-local button1 = createNewOption("custom","Protect Provinces","Add")
-local button5 = createNewOption("custom","Remove Province Protection","Remove")
+local button1 = createNewOption("custom","Protect Province","Add")
+local button5 = createNewOption("custom","Unprotect Province","Remove")
 local button3 = createNewOption("custom","Clear Provinces","Clear")
 local button4 = createNewOption("switch","Safe Mode")
 local togglePaintButton = createNewOption("switch","Toggle Paint",nil,true)
-local newPaintButton = createNewOption("switch","Fast Paint (NEW)")
+local newPaintButton = createNewOption("switch","Fast Paint")
+local territoryColorButton = createNewOption("switch","Keep Territory Color (NEW)")
+local randomColorButton = createNewOption("custom","Randomize color (NEW)","Change")
 
 mouse.Button1Down:Connect(function()
 	if mouse.Target and mouse.Target.Name == "Province" then
@@ -378,6 +392,27 @@ newPaintButton.MouseButton1Down:Connect(function()
 		tweenService:Create(newPaintButton,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
 		tweenService:Create(newPaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
 	end
+end)
+
+territoryColorButton.MouseButton1Down:Connect(function()
+	sound2:Play()
+	if keepTerColor then
+		keepTerColor = false
+		tweenService:Create(territoryColorButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(241, 33, 103)}):Play()
+		tweenService:Create(territoryColorButton,TweenInfo.new(0.1),{Position = UDim2.new(0,0,0,0)}):Play()
+		tweenService:Create(territoryColorButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(0,0)}):Play()
+	else
+		keepTerColor = true
+		tweenService:Create(territoryColorButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
+		tweenService:Create(territoryColorButton,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
+		tweenService:Create(territoryColorButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
+	end
+end)
+
+randomColorButton.MouseButton1Down:Connect(function()
+	color = Color3.fromRGB(math.random(0,255),math.random(0,255),math.random(0,255))
+	button2.BackgroundColor3 = color
+	changecolor:Play()
 end)
 
 while task.wait(1) do
