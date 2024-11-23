@@ -197,7 +197,6 @@ local function createNewOption(optionType,text,customText,enabled)
 		switch.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		local aspectRatio = Instance.new("UIAspectRatioConstraint",switch)
 		if enabled then
-			print("a")
 			tweenService:Create(switch.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
 			tweenService:Create(switch,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
 			tweenService:Create(switch,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
@@ -413,6 +412,28 @@ randomColorButton.MouseButton1Down:Connect(function()
 	color = Color3.fromRGB(math.random(0,255),math.random(0,255),math.random(0,255))
 	button2.BackgroundColor3 = color
 	changecolor:Play()
+end)
+
+userInputService.InputBegan:Connect(function(input,isTyping)
+	if isTyping == false then
+		if input.KeyCode == Enum.KeyCode.R then
+			color = Color3.fromRGB(math.random(0,255),math.random(0,255),math.random(0,255))
+			button2.BackgroundColor3 = color
+			changecolor:Play()
+		elseif input.KeyCode == Enum.KeyCode.Q then
+			if painting then
+				painting = false
+				tweenService:Create(togglePaintButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(241, 33, 103)}):Play()
+				tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{Position = UDim2.new(0,0,0,0)}):Play()
+				tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(0,0)}):Play()
+			else
+				painting = true
+				tweenService:Create(togglePaintButton.Parent,TweenInfo.new(0.1),{BackgroundColor3 = Color3.fromRGB(53, 227, 153)}):Play()
+				tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{Position = UDim2.new(1,0,0,0)}):Play()
+				tweenService:Create(togglePaintButton,TweenInfo.new(0.1),{AnchorPoint = Vector2.new(1,0)}):Play()
+			end
+		end
+	end
 end)
 
 while task.wait(1) do
