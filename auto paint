@@ -436,6 +436,35 @@ userInputService.InputBegan:Connect(function(input,isTyping)
 	end
 end)
 
+local frame = Instance.new("Frame",UI)
+frame.AnchorPoint = Vector2.new(0.5,0.5)
+frame.BackgroundColor3 = Color3.fromRGB(33,33,42)
+frame.Position = UDim2.new(0.5,0,0.5,0)
+frame.Size = UDim2.new(0.5,0,0.3,0)
+local textbox = Instance.new("TextBox",frame)
+textbox.BackgroundTransparency = 1
+textbox.Position = UDim2.new(0,0,0.5,0)
+textbox.Size = UDim2.new(1,0,0.3,0)
+textbox.TextScaled = true
+textbox.TextEditable = false
+textbox.ClearTextOnFocus = false
+textbox.Text = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ROBLOX404/Auto-Painter/refs/heads/main/AutoPaint2.luau",true))();]]
+textbox.TextColor3 = Color3.fromRGB(255,255,255)
+local textlabel = Instance.new("TextLabel",frame)
+textlabel.BackgroundTransparency = 1
+textlabel.Size = UDim2.new(1,0,0.5,0)
+textlabel.TextColor3 = Color3.fromRGB(255,255,255)
+textlabel.TextScaled = true
+textlabel.Text = "dear user, we ve made a new and faster panel which is still in development, code will be below"
+local textbutton = Instance.new("TextButton",frame)
+textbutton.AnchorPoint = Vector2.new(0,1)
+textbutton.Position = UDim2.new(0,0,1,0)
+textbutton.Size = UDim2.new(1,0,0.2,0)
+textbutton.Text = "OK"
+textbutton.MouseButton1Down:Connect(function()
+	frame:Destroy()
+end)
+
 while task.wait(1) do
 	pss.TextColor3 = Color3.fromRGB(80, 255, 123)
 	if provincespersecond >= 50 then
